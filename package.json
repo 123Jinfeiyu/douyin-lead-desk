@@ -1,0 +1,14 @@
+{
+  "name": "douyin-lead-desk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "抖音商家线索工作台 · 人工在环（在线版）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/api.test.js && node tests/ui.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

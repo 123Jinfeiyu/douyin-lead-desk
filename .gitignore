@@ -1,0 +1,4 @@
+# 运行期数据：库、口令、密钥派生用 secret、快照
+data/
+*.log
+node_modules/

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>抖音商家线索工作台</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%2335e0a1'/><text x='16' y='22' font-size='17' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%2304140d'>线</text></svg>">
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login" hidden>
+  <form class="login-card" id="loginForm" autocomplete="off">
+    <div class="brand">
+      <div class="brand-mark">线</div>
+      <div class="brand-txt"><strong>线索工作台</strong><span>LEAD DESK · 人工在环</span></div>
+    </div>
+    <h2>输入访问口令</h2>
+    <p>口令在服务器启动日志里，或 <code class="mono">data/password.txt</code>。这台机器上的数据只有拿到口令的人能读写。</p>
+    <div class="field">
+      <label for="pw">口令</label>
+      <input type="password" id="pw" placeholder="例如 lime-moss-fern-dune-1234" autocomplete="current-password">
+    </div>
+    <div class="err" id="loginErr"></div>
+    <button class="btn primary block" type="submit" id="loginBtn" style="margin-top:6px">进入</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark">线</div>
+      <div class="brand-txt"><strong>线索工作台</strong><span>LEAD DESK</span></div>
+    </div>
+    <button class="nav-item on" data-view="queue"><span class="ico">◈</span><span>今日队列</span><span class="badge" id="badgeQueue">0</span></button>
+    <button class="nav-item" data-view="leads"><span class="ico">▤</span><span>线索库</span><span class="badge" id="badgeLeads">0</span></button>
+    <button class="nav-item" data-view="keywords"><span class="ico">#</span><span>关键词库</span><span class="badge" id="badgeKw">0</span></button>
+    <button class="nav-item" data-view="follow"><span class="ico">↻</span><span>跟进</span><span class="badge" id="badgeFollow">0</span></button>
+    <button class="nav-item" data-view="drafts"><span class="ico">✎</span><span>草稿箱</span><span class="badge" id="badgeDrafts">0</span></button>
+    <button class="nav-item" data-view="stats"><span class="ico">▦</span><span>统计</span></button>
+    <button class="nav-item" data-view="settings"><span class="ico">⚙</span><span>设置</span></button>
+    <div class="side-foot">
+      数据存在服务端<br>
+      发送动作由你本人完成<br>
+      <b>不自动登录 · 不自动发送</b>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1 id="viewTitle">今日队列</h1>
+      <span class="sub" id="viewSub"></span>
+      <span class="spacer"></span>
+      <span class="tag info" id="saveState">已同步</span>
+      <button class="btn icon ghost" id="themeBtn" title="切换主题">◐</button>
+      <button class="btn sm ghost" id="logoutBtn" title="退出登录">退出</button>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ 今日队列 ============ -->
+      <section id="view-queue">
+        <div class="qhead">
+          <div class="qmeter"><b id="qRemain">0</b><span>家待联系</span></div>
+          <button class="btn primary" id="btnNext">下一家 →</button>
+          <button class="btn" id="btnRebuild">重建队列</button>
+          <button class="btn" id="btnPause">暂停</button>
+          <span class="spacer"></span>
+          <div class="row tight">
+            <span class="tag" id="kwTag">关键词：—</span>
+            <button class="btn sm" id="btnKw">抽一个关键词</button>
+          </div>
+        </div>
+
+        <div id="queueEmpty" class="empty" hidden></div>
+
+        <div id="queueBody">
+          <div class="card" id="leadCard">
+            <div class="lead-head">
+              <div class="avatar" id="leadAvatar">—</div>
+              <div class="lead-title">
+                <h3 id="leadName">—</h3>
+                <div class="lead-meta" id="leadMeta"></div>
+                <div class="lead-bio" id="leadBio" hidden></div>
+              </div>
+              <div class="score-ring"><b id="leadScore">—</b><span>SCORE</span></div>
+            </div>
+
+            <div class="draft-box">
+              <div class="row" style="margin-bottom:10px">
+                <span class="card-h" style="margin:0"><h2>私信话术</h2></span>
+                <span class="spacer"></span>
+                <div class="row tight" id="toneChips"></div>
+                <button class="btn sm primary" id="btnDraft">✦ 生成</button>
+              </div>
+              <textarea id="draftText" placeholder="点「生成」按商家信息起草，或者自己写。发送请到抖音里手动完成。" rows="4"></textarea>
+              <div id="lintBox"></div>
+              <div class="draft-actions">
+                <button class="btn" id="btnCopy">复制话术</button>
+                <button class="btn" id="btnOpenProfile">打开主页</button>
+                <button class="btn" id="btnSkip">跳过</button>
+                <button class="btn danger ghost" id="btnExclude">排除</button>
+                <span class="spacer"></span>
+                <button class="btn primary" id="btnSent">我已在抖音发出 →</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-h">
+              <h2>队列预览</h2>
+              <span class="hint">按匹配分排序；标记已发送后自动前进</span>
+            </div>
+            <div class="qlist" id="queueList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 线索库 ============ -->
+      <section id="view-leads" hidden>
+        <div class="card">
+          <div class="row" style="margin-bottom:12px">
+            <input type="search" id="leadSearch" placeholder="搜名称 / 抖音号 / 地区 / 简介…" style="max-width:280px">
+            <select id="leadStatus" style="max-width:130px">
+              <option value="">全部状态</option>
+              <option value="new">待联系</option>
+              <option value="contacted">已联系</option>
+              <option value="replied">已回复</option>
+              <option value="won">已成交</option>
+              <option value="excluded">已排除</option>
+              <option value="invalid">无效</option>
+            </select>
+            <select id="leadIndustry" style="max-width:130px"><option value="">全部行业</option></select>
+            <span class="spacer"></span>
+            <button class="btn sm" id="btnAddLead">+ 录入商家</button>
+            <button class="btn sm" id="btnImport">导入</button>
+            <button class="btn sm" id="btnExportCsv">导出 CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>商家</th><th>地区 / 行业</th><th class="num">粉丝</th><th>资质</th>
+                  <th>状态</th><th class="num">分数</th><th>冷却</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="leadRows"></tbody>
+            </table>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="hint" id="leadCount">—</span>
+            <span class="spacer"></span>
+            <button class="btn sm ghost" id="btnDemo">载入示例数据</button>
+            <button class="btn sm ghost" id="btnExportJson">备份 JSON</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 关键词库 ============ -->
+      <section id="view-keywords" hidden>
+        <div class="card">
+          <div class="card-h">
+            <h2>批量添加</h2>
+            <span class="hint">每行一个，格式 <code class="mono">关键词 | 城市 | 分类</code>，后两项可省。重复组合会被挡住</span>
+          </div>
+          <textarea id="kwBulk" rows="4" placeholder="餐饮 | 厦门 | 行业&#10;烤鱼 | 厦门 | 品类&#10;美容 | 福州 | 行业"></textarea>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="btnKwAdd">添加到关键词库</button>
+            <span class="hint" id="kwAddResult"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <h2>关键词</h2>
+            <span class="hint">同一个词 7 天内不会被重复抽到；抽中时会记一次使用</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>关键词</th><th>分类</th><th>地域</th><th class="num">用过</th><th>冷却</th><th>状态</th><th></th></tr></thead>
+              <tbody id="kwRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 跟进 ============ -->
+      <section id="view-follow" hidden>
+        <div class="card">
+          <div class="card-h">
+            <h2>到期跟进</h2>
+            <span class="hint">标记已发送时默认 3 天后提醒；对方回复后可以重新设时间</span>
+          </div>
+          <div id="followList"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>最近消息</h2><span class="hint">只记录你确认发过 / 对方回了的内容</span></div>
+          <div id="msgList"></div>
+        </div>
+      </section>
+
+      <!-- ============ 草稿箱 ============ -->
+      <section id="view-drafts" hidden>
+        <div class="card">
+          <div class="card-h"><h2>历史草稿</h2><span class="hint">生成过的都留着，方便对比哪版话术回得多</span></div>
+          <div id="draftList"></div>
+        </div>
+      </section>
+
+      <!-- ============ 统计 ============ -->
+      <section id="view-stats" hidden>
+        <div class="kpis" id="kpiGrid"></div>
+        <div class="card" style="margin-top:14px">
+          <div class="card-h"><h2>线索状态分布</h2></div>
+          <div class="bars" id="barStatus"></div>
+        </div>
+        <div class="grid-2" style="margin-top:14px">
+          <div class="card" style="margin-top:0">
+            <div class="card-h"><h2>行业分布</h2></div>
+            <div class="bars" id="barIndustry"></div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <div class="card-h"><h2>被排除的原因</h2><span class="hint">硬筛选挡掉了什么</span></div>
+            <div class="bars" id="barReason"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 设置 ============ -->
+      <section id="view-settings" hidden>
+        <div class="card">
+          <div class="card-h">
+            <h2>AI 起草</h2>
+            <span class="hint">Key 只存服务端，浏览器拿不到明文</span>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="setBase">接口地址（OpenAI 兼容）</label>
+              <input type="text" id="setBase" placeholder="https://api.deepseek.com">
+            </div>
+            <div class="field">
+              <label for="setModel">模型</label>
+              <input type="text" id="setModel" placeholder="deepseek-chat">
+            </div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label for="setKey">API Key</label>
+            <input type="password" id="setKey" placeholder="留空表示不修改">
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="btnSaveAi">保存</button>
+            <button class="btn" id="btnTestAi">测试连接</button>
+            <button class="btn ghost" id="btnPresetDeepseek">填 DeepSeek 默认</button>
+            <button class="btn ghost" id="btnPresetArk">填火山方舟</button>
+            <span class="hint" id="aiTestResult"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>我方信息</h2><span class="hint">话术里会用到，写具体一点生成质量更高</span></div>
+          <div class="grid-2">
+            <div class="field"><label for="setBrand">品牌 / 公司名</label><input type="text" id="setBrand" placeholder="例如 厦门××供应链"></div>
+            <div class="field"><label for="setIndustry">我方行业</label><input type="text" id="setIndustry" placeholder="例如 餐饮供应链 / 美团代运营"></div>
+          </div>
+          <div class="grid-2" style="margin-top:10px">
+            <div class="field"><label for="setCity">常驻城市</label><input type="text" id="setCity" placeholder="厦门"></div>
+            <div class="field"><label for="setCap">每日发送上限</label><input type="number" id="setCap" min="1" max="200" placeholder="30"></div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label for="setNote">话术里要强调的点（可不填）</label>
+            <textarea id="setNote" rows="2" placeholder="例如：我们做冻品配送，厦门岛内当日达，起订量低"></textarea>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="btnSaveBiz">保存</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>安全与数据</h2></div>
+          <div class="field">
+            <label>访问口令</label>
+            <p class="hint" style="margin:0">口令存在服务器的 <code class="mono">data/password.txt</code>。改法：改那个文件后重启服务，或启动时用 <code class="mono">LD_PASSWORD=新口令</code> 覆盖。</p>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="btnExportJson2">导出全部数据（JSON）</button>
+            <button class="btn" id="btnImportFile">导入 JSON 备份</button>
+            <input type="file" id="fileInput" accept=".json,.csv,.txt" hidden>
+          </div>
+          <p class="hint" style="margin-top:12px;line-height:1.8">
+            这个工具替你做「找谁、说什么、什么时候跟进、别重复骚扰」。它<b>不</b>替你登录抖音、不模拟点击、不自动发消息，也不改写敏感词来绕过检测 —— 绕字不改变行为性质，平台判定的是导流行为本身。
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div id="modalHost"></div>
+<div id="toasts"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
